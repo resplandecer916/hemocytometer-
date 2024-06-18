@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Hemocytometer Cell Count</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    div {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      font-size: 24px;
+      color: #333;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+    label {
+      margin-top: 10px;
+      color: #555;
+    }
+    input[type="number"] {
+      padding: 8px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px;
+      border: none;
+      border-radius: 4px;
+      background-color: #28a745;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #218838;
+    }
+    h2 {
+      font-size: 20px;
+      color: #333;
+    }
+    p {
+      font-size: 16px;
+      color: #555;
+    }
+    p.error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+<div>
+  <h1>Hemocytometer Cell Count</h1>
+  <form id="cellCountForm">
+    <label for="cell_count1">Cell Count 1:</label>
+    <input type="number" id="cell_count1" name="cell_count1" required>
+
+    <label for="cell_count2">Cell Count 2:</label>
+    <input type="number" id="cell_count2" name="cell_count2" required>
+
+    <label for="cell_count3">Cell Count 3:</label>
+    <input type="number" id="cell_count3" name="cell_count3" required>
+
+    <label for="cell_count4">Cell Count 4:</label>
+    <input type="number" id="cell_count4" name="cell_count4" required>
+
+    <label for="dead_cell_count1">Dead Cell Count 1:</label>
+    <input type="number" id="dead_cell_count1" name="dead_cell_count1" required>
+
+    <label for="dead_cell_count2">Dead Cell Count 2:</label>
+    <input type="number" id="dead_cell_count2" name="dead_cell_count2" required>
+
+    <label for="dead_cell_count3">Dead Cell Count 3:</label>
+    <input type="number" id="dead_cell_count3" name="dead_cell_count3" required>
+
+    <label for="dead_cell_count4">Dead Cell Count 4:</label>
+    <input type="number" id="dead_cell_count4" name="dead_cell_count4" required>
+
+    <label for="trypan_blue_volume_ul">Trypan Blue Volume (μL):</label>
+    <input type="number" step="0.01" id="trypan_blue_volume_ul" name="trypan_blue_volume_ul" required>
+
+    <label for="cell_solution_volume_ul">Cell Solution Volume (μL):</label>
+    <input type="number" step="0.01" id="cell_solution_volume_ul" name="cell_solution_volume_ul" required>
+
+    <button type="button" onclick="calculate()">Calculate</button>
+  </form>
+
+  <div id="results" style="display: none;">
+    <h2>Results:</h2>
+    <p>Average Live Cell Count: <span id="averageLiveCellCount"></span></p>
+    <p>Live Cell Density: <span id="liveCellDensity"></span> x 10<sup>5</sup> cells/ml</p>
+    <p>Average Dead Cell Count: <span id="averageDeadCellCount"></span></p>
+    <p>Dead Cell Density: <span id="deadCellDensity"></span> x 10<sup>5</sup> cells/ml</p>
+    <p>Total Cell Density: <span id="totalCellDensity"></span> x 10<sup>5</sup> cells/ml</p>
+    <p>Cell Viability: <span id="cellViability"></span>%</p>
+  </div>
+
+  <p id="errorMessage" class="error" style="display: none;"></p>
+</div>
+
+<script>
+  function calculate() {
+    // Get input values
+    let cellCounts = [
+      parseInt(document.getElementById('cell_count1').value),
+      parseInt(document.getElementById('cell_count2').value),
+      parseInt(document.getElementById('cell_count3').value),
+      parseInt(document.getElementById('cell_count4').value)
+    ];
+    let deadCellCounts = [
+      parseInt(document.getElementById('dead_cell_count1').value),
+      parseInt(document.getElementById('dead_cell_count2').value),
+      parseInt(document.getElementById('dead_cell_count3').value),
+      parseInt(document.getElementById('dead_cell_count4').value)
+    ];
+    let trypanBlueVolume = parseFloat(document.getElementById('trypan_blue_volume_ul').value);
+    let cellSolutionVolume = parseFloat(document.getElementById('cell_solution_volume_ul').value);
+
+    try {
+      // Validation
+      if (isNaN(trypanBlueVolume) || isNaN(cellSolutionVolume)) {
+        throw "Please enter valid numbers for Trypan Blue Volume and Cell Solution Volume.";
+      }
+
+      // Calculate averages
+      let averageLiveCellCount = cellCounts.reduce((acc, curr) => acc + curr, 0) / cellCounts.length;
+      let averageDeadCellCount = deadCellCounts.reduce((acc, curr) => acc + curr, 0) / deadCellCounts.length;
+
+      // Calculate dilution factor
+      let trypanBlueVolume_ml = trypanBlueVolume * 0.001;
+      let cellSolutionVolume_ml = cellSolutionVolume * 0.001;
+      let dilutionFactor = (trypanBlueVolume_ml + cellSolutionVolume_ml) / cellSolutionVolume_ml;
+
+      // Calculate densities
+      let liveCellDensity = (averageLiveCellCount * dilutionFactor * 10000) / 100000;
+      let deadCellDensity = (averageDeadCellCount * dilutionFactor * 10000) / 100000;
+      let totalCellDensity = liveCellDensity + deadCellDensity;
+      let cellViability = (liveCellDensity / totalCellDensity) * 100;
+
+      // Display results
+      document.getElementById('averageLiveCellCount').textContent = averageLiveCellCount.toFixed(2);
+      document.getElementById('liveCellDensity').textContent = liveCellDensity.toFixed(2);
+      document.getElementById('averageDeadCellCount').textContent = averageDeadCellCount.toFixed(2);
+      document.getElementById('deadCellDensity').textContent = deadCellDensity.toFixed(2);
+      document.getElementById('totalCellDensity').textContent = totalCellDensity.toFixed(2);
+      document.getElementById('cellViability').textContent = cellViability.toFixed(2);
+
+      // Show results section
+      document.getElementById('results').style.display = 'block';
+      document.getElementById('errorMessage').style.display = 'none';
+    } catch (error) {
+      // Display error message
+      document.getElementById('errorMessage').textContent = "Error: " + error;
+      document.getElementById('errorMessage').style.display = 'block';
+      document.getElementById('results').style.display = 'none';
+    }
+  }
+</script>
+</body>
+</html>
